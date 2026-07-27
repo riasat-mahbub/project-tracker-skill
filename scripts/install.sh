@@ -19,43 +19,63 @@ else
     echo "    Tool repo already at $TOOL_DIR"
 fi
 
-pip install pyyaml --quiet 2>/dev/null || pip install pyyaml
-pip install -e "$TOOL_DIR" --quiet 2>/dev/null || pip install -e "$TOOL_DIR"
+_pip_install() {
+    # Handle externally-managed environments (Arch Linux, etc.)
+    pip install "$@" --quiet 2>/dev/null \
+        || pip install "$@" --quiet --break-system-packages 2>/dev/null \
+        || pip install "$@" --quiet --user 2>/dev/null \
+        || pip install "$@"
+}
+
+_pip_install pyyaml
+_pip_install -e "$TOOL_DIR"
 
 # ---------------------------------------------------------------- harness --
 echo ""
-echo "==> Detecting harness and registering skill..."
+echo "==> Detecting harnesses and registering skill..."
 
-# Project-local (highest priority)
+installed=0
+
+# Project-local harnesses
 if [ -f ".opencode.json" ] || [ -f ".opencode.jsonc" ]; then
     mkdir -p .opencode/skills
     rm -rf ".opencode/skills/project-tracker"
     ln -sfn "$SKILL_SOURCE" ".opencode/skills/project-tracker"
     echo "    Installed for OpenCode (project-local)"
+    installed=1
+fi
 
-elif [ -d ".agents" ]; then
+if [ -d ".agents" ]; then
     mkdir -p .agents/skills
     rm -rf ".agents/skills/project-tracker"
     ln -sfn "$SKILL_SOURCE" ".agents/skills/project-tracker"
     echo "    Installed for Reasonix (project-local)"
+    installed=1
+fi
 
 # Home-directory harnesses
-elif [ -d "$HOME/.opencode/skills" ]; then
+if [ -d "$HOME/.opencode/skills" ]; then
     rm -rf "$HOME/.opencode/skills/project-tracker"
     ln -sfn "$SKILL_SOURCE" "$HOME/.opencode/skills/project-tracker"
     echo "    Installed for OpenCode"
+    installed=1
+fi
 
-elif [ -d "$HOME/.agents/skills" ]; then
+if [ -d "$HOME/.agents/skills" ]; then
     rm -rf "$HOME/.agents/skills/project-tracker"
     ln -sfn "$SKILL_SOURCE" "$HOME/.agents/skills/project-tracker"
     echo "    Installed for Reasonix"
+    installed=1
+fi
 
-elif [ -d "$HOME/.claude/skills" ]; then
+if [ -d "$HOME/.claude/skills" ]; then
     rm -rf "$HOME/.claude/skills/project-tracker"
     ln -sfn "$SKILL_SOURCE" "$HOME/.claude/skills/project-tracker"
     echo "    Installed for Claude Code"
+    installed=1
+fi
 
-else
+if [ "$installed" -eq 0 ]; then
     echo "    No supported harness detected."
     echo ""
     echo "    Manually symlink into your harness's skills directory:"
