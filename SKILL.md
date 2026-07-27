@@ -1,6 +1,6 @@
 ---
 name: project-tracker
-description: File-based project knowledge graph. Before editing code, search related bugs, features, ADRs, tasks — then validate and rebuild after changes.
+description: File-based project knowledge graph. Before editing, search related bugs, features, ADRs. After changes, rebuild and validate.
 runAs: inline
 ---
 
