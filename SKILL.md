@@ -13,11 +13,26 @@ dashboards, a JSON adjacency graph (`graph.json`), and automatic backlinks.
 
 ## Prerequisites
 
-Run this once to set up the skill and CLI tool:
+The `tracker` CLI must be available:
 
-    bash scripts/install.sh
+    tracker --help
 
-If the `tracker` command is not available after that, tell the user.
+If not, tell the user to install it from the
+[projet-tracker-graph](https://github.com/riasat-mahbub/projet-tracker-graph) repo:
+
+    pip install pyyaml
+    pip install -e /path/to/projet-tracker-graph
+
+## Workflow: Initial setup
+
+Run this once per project to scaffold the tracker directory:
+
+    tracker init
+
+Then commit it:
+
+    git add tracker/
+    git commit -m "Initialize project tracker"
 
 ## Workflow: Before editing code
 
@@ -37,6 +52,7 @@ If the `tracker` command is not available after that, tell the user.
 2. **Rebuild** — `tracker rebuild` (regenerates all index pages,
    `README.md`, `graph.json`, and computed backlinks)
 3. **Validate** — `tracker validate` (confirm consistency)
+4. **Commit** — `git add tracker/ && git commit -m "tracker: update after edit"`
 
 ## Workflow: Creating a new entry
 
@@ -54,7 +70,7 @@ After creation, edit the entry file to fill in:
 - **Body sections** — Background, Investigation, Decision, Implementation,
   Verification, Follow-up
 
-Then run `tracker rebuild && tracker validate`.
+Then run `tracker rebuild && tracker validate && git add tracker/ && git commit -m "tracker: add new entry"`.
 
 ## Workflow: Reading the project graph
 
@@ -78,7 +94,9 @@ Read this file once to get the full project graph in a single load:
     tracker close BUG-001 --resolution "Fixed with write lock"
 
 Before closing, ensure the Verification section is complete and all relations
-are valid.
+are valid. After closing, commit:
+
+    git add tracker/ && git commit -m "tracker: close BUG-001"
 
 ## Quick command reference
 
