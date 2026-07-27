@@ -70,5 +70,21 @@
     "relations": {},
     "affects": {},
     "referenced_by": []
+  },
+  "FEAT-004": {
+    "type": "feature",
+    "status": "DONE",
+    "priority": "High",
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  },
+  "FEAT-005": {
+    "type": "feature",
+    "status": "DONE",
+    "priority": "Medium",
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
   }
 }
