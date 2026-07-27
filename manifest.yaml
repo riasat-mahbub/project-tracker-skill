@@ -1,0 +1,41 @@
+schema: 1
+name: project-tracker
+description: File-based project knowledge graph — bugs, features, decisions, tasks, epics
+commands:
+  init:
+    read_only: false
+    modifies_tracker: false
+    generates:
+      - tracker/ directory structure
+      - tracker/_template.md
+  new:
+    read_only: false
+    modifies_entries: true
+    generates:
+      - entry file in appropriate folder
+  close:
+    read_only: false
+    modifies_entries: true
+    takes:
+      - id: entry ID to close
+      - resolution: optional resolution notes
+  validate:
+    read_only: true
+  rebuild:
+    read_only: false
+    modifies_generated_only: true
+    generates:
+      - tracker/README.md
+      - "*/index.md"
+      - tracker/graph.json
+      - COMPUTED backlinks
+  migrate:
+    read_only: false
+    modifies_entries: true
+  doctor:
+    read_only: false
+    modifies_entries: true
+  search:
+    read_only: true
+  stats:
+    read_only: true
