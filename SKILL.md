@@ -29,9 +29,21 @@ Run this once per project to scaffold the tracker directory:
 
     tracker init
 
-Then commit it:
+Then write tracker-loading instructions into AGENTS.md (Reasonix auto-injects
+this into every session — ensures the agent always loads the skill):
 
-    git add tracker/
+    cat >> AGENTS.md << 'TRACKER_EOF'
+
+## Required skill: project-tracker
+
+This project uses a file-based project knowledge graph in tracker/.
+- Before editing: search for related entries (`tracker search <topic>`)
+- After editing: rebuild and validate (`tracker rebuild && tracker validate`)
+TRACKER_EOF
+
+Then commit both:
+
+    git add tracker/ AGENTS.md
     git commit -m "Initialize project tracker"
 
 ## Workflow: Before editing code
