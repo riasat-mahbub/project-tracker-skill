@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# When piped from curl — no local files — clone and re-exec
+if [ ! -f "$(dirname "$0")/../SKILL.md" ]; then
+    TMP_DIR=$(mktemp -d)
+    git clone --depth 1 --branch main \
+        "https://github.com/riasat-mahbub/project-tracker-skill.git" "$TMP_DIR"
+    exec bash "$TMP_DIR/scripts/install.sh"
+fi
+
 SKILL_SOURCE="$(cd "$(dirname "$0")/.." && pwd)"
 TOOL_DIR="$HOME/Projects/projet-tracker-graph"
 TOOL_REPO="git@github.com:riasat-mahbub/projet-tracker-graph.git"
@@ -20,7 +28,6 @@ else
 fi
 
 _pip_install() {
-    # Handle externally-managed environments (Arch Linux, etc.)
     pip install "$@" --quiet 2>/dev/null \
         || pip install "$@" --quiet --break-system-packages 2>/dev/null \
         || pip install "$@" --quiet --user 2>/dev/null \
@@ -36,7 +43,6 @@ echo "==> Detecting harnesses and registering skill..."
 
 installed=0
 
-# Project-local harnesses
 if [ -f ".opencode.json" ] || [ -f ".opencode.jsonc" ]; then
     mkdir -p .opencode/skills
     rm -rf ".opencode/skills/project-tracker"
@@ -53,7 +59,6 @@ if [ -d ".agents" ]; then
     installed=1
 fi
 
-# Home-directory harnesses
 if [ -d "$HOME/.opencode/skills" ]; then
     rm -rf "$HOME/.opencode/skills/project-tracker"
     ln -sfn "$SKILL_SOURCE" "$HOME/.opencode/skills/project-tracker"

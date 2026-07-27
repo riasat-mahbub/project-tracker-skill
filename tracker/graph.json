@@ -1,0 +1,74 @@
+{
+  "ADR-001": {
+    "type": "adr",
+    "status": "DONE",
+    "priority": null,
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  },
+  "ADR-002": {
+    "type": "adr",
+    "status": "DONE",
+    "priority": null,
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  },
+  "ADR-003": {
+    "type": "adr",
+    "status": "DONE",
+    "priority": null,
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  },
+  "ADR-004": {
+    "type": "adr",
+    "status": "DONE",
+    "priority": null,
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  },
+  "ADR-005": {
+    "type": "adr",
+    "status": "DONE",
+    "priority": null,
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  },
+  "ADR-006": {
+    "type": "adr",
+    "status": "DONE",
+    "priority": null,
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  },
+  "FEAT-001": {
+    "type": "feature",
+    "status": "DONE",
+    "priority": null,
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  },
+  "FEAT-002": {
+    "type": "feature",
+    "status": "DONE",
+    "priority": null,
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  },
+  "FEAT-003": {
+    "type": "feature",
+    "status": "DONE",
+    "priority": null,
+    "relations": {},
+    "affects": {},
+    "referenced_by": []
+  }
+}

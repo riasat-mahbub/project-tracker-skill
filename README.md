@@ -6,6 +6,12 @@ project knowledge graph.  The actual CLI tool lives in a [separate repo](https:/
 ## Install
 
 ```bash
+curl -sSL https://raw.githubusercontent.com/riasat-mahbub/project-tracker-skill/main/scripts/install.sh | bash
+```
+
+Or from a local checkout:
+
+```bash
 bash scripts/install.sh
 ```
 
