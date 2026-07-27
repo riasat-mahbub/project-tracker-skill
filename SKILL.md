@@ -1,268 +1,95 @@
 ---
 name: project-tracker
-description: Maintain a file-based project knowledge graph (tracker/) as the single source of truth for project state. Use this skill whenever the user wants to log a bug, propose a feature, record an ADR, track tech debt, check project status, or understand what the project knows. Before starting non-trivial work in a repo that has a tracker/, read tracker/README.md first.
+description: File-based project knowledge graph. Before editing code, search related bugs, features, ADRs, tasks — then validate and rebuild after changes.
+runAs: inline
 ---
 
-# Project Tracker Skill
+# Project Tracker
 
 This skill manages a `tracker/` directory that acts as a **project knowledge
-graph** — not just an issue tracker.  Every bug, feature, decision (ADR), task,
-epic, and doc is a Markdown file with structured YAML frontmatter.  A `rebuild`
-step generates dashboards, a JSON adjacency graph, and automatic backlinks.
+graph** — bugs, features, decisions (ADRs), tasks, and epics.  Every entry is a
+Markdown file with YAML frontmatter.  A `tracker rebuild` step generates
+dashboards, a JSON adjacency graph (`graph.json`), and automatic backlinks.
 
 ## Prerequisites
 
-The `tracker` CLI must be installed in the project:
+Run this once to set up the skill and CLI tool:
 
-```bash
-pip install pyyaml
-pip install -e /path/to/project-tracker-graph
-```
+    bash scripts/install.sh
 
-Or run without installing:
-```bash
-python -m /path/to/project-tracker-graph/tracker init
-```
+If the `tracker` command is not available after that, tell the user.
 
-## Directory layout
+## Workflow: Before editing code
 
-```
-tracker/
-├── README.md             # generated dashboard
-├── _template.md           # SCHEMA: 2 template
-├── graph.json             # generated adjacency list
-├── bugs/                  # BUG-001-*.md
-├── features/              # FEAT-023-*.md
-├── decisions/             # ADR-004-*.md
-├── tasks/                 # TASK-017-*.md
-├── epics/                 # EPIC-001-*.md
-└── docs/                  # DOC-002-*.md
-```
+1. **Search for context** — `tracker search <topic>` (finds entries matching
+   the topic in frontmatter fields and body text)
+2. **Read matches** — read the entries returned by search, especially their
+   `RELATIONS` (what they depend on, what depends on them) and `AFFECTS.files`
+   (which source files they touch)
+3. **Validate state** — `tracker validate` (checks schema, catches broken
+   references before you start editing)
 
-## Entry format
+## Workflow: After editing code
 
-Every entry uses YAML frontmatter + Markdown body:
+1. **Update tracker** — update the relevant entry's `STATUS`, add
+   `RELATIONS` linking to related entries, and list changed files under
+   `AFFECTS.files`
+2. **Rebuild** — `tracker rebuild` (regenerates all index pages,
+   `README.md`, `graph.json`, and computed backlinks)
+3. **Validate** — `tracker validate` (confirm consistency)
 
-```yaml
----
-SCHEMA: 2
-FORMAT: project-tracker
-ID: BUG-001
-TYPE: bug
-STATUS: PROPOSED
-PRIORITY: Medium
-SEVERITY: Medium
-EFFORT: M
-OWNER:
-CONFIDENCE: Medium
-TAGS:
-  - auth
-RELATIONS:
-  depends_on:
-    - FEAT-018
-  epic:
-    - EPIC-001
-AFFECTS:
-  modules:
-    - authentication
-  files:
-    - backend/api/auth.py
-LINKS:
-  commits:
-    - abc123f
-CREATED_BY:
-UPDATED_BY:
-COMPUTED:
-  referenced_by:
-    - BUG-003
----
-# Title
+## Workflow: Creating a new entry
 
-## Background
+    tracker new bug "Login race condition" --priority High --effort M
+    tracker new feature "Bulk export" --effort L
+    tracker new adr "Choose Postgres over MySQL" --status DONE
+    tracker new task "Audit dependencies" --tags security
+    tracker new epic "Authentication rewrite"
 
-## Investigation
+After creation, edit the entry file to fill in:
 
-## Decision
+- **RELATIONS** — link to existing entries (`depends_on: [FEAT-018]`,
+  `epic: [EPIC-001]`)
+- **AFFECTS.files** — list source files the entry touches
+- **Body sections** — Background, Investigation, Decision, Implementation,
+  Verification, Follow-up
 
-## Implementation
+Then run `tracker rebuild && tracker validate`.
 
-## Verification
+## Workflow: Reading the project graph
 
-## Follow-up
-```
-
-### Fields
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `SCHEMA` | yes | Schema version (currently 2) |
-| `FORMAT` | yes | Always `project-tracker` |
-| `ID` | yes | `TYPE-PREFIX-NNN`, e.g. `BUG-001`, `FEAT-023` |
-| `TYPE` | yes | `bug`, `feature`, `adr`, `task`, `epic`, `doc` |
-| `STATUS` | yes | `PROPOSED`, `PLANNED`, `IN_PROGRESS`, `BLOCKED`, `TESTING`, `DONE`, `CANCELLED`, `DUPLICATE` |
-| `PRIORITY` | no | `Critical`, `High`, `Medium`, `Low` |
-| `SEVERITY` | no | `Critical`, `High`, `Medium`, `Low` |
-| `EFFORT` | no | `XS`, `S`, `M`, `L`, `XL` |
-| `OWNER` | no | `Agent`, `Human`, or a name |
-| `CONFIDENCE` | no | `High`, `Medium`, `Low` |
-| `TAGS` | no | List of strings |
-| `RELATIONS` | no | Mapping of relation type to list of IDs |
-| `AFFECTS` | no | Mapping with `modules` and `files` lists |
-| `LINKS` | no | Mapping with `commits`, `prs`, `urls` lists |
-| `CREATED_BY` | no | Who created the entry |
-| `UPDATED_BY` | no | Who last updated the entry |
-| `COMPUTED` | auto | Generated by `tracker rebuild` — never hand-edit |
-
-### Relation types
-
-| Relation | Inverse (computed) | Meaning |
-|----------|-------------------|---------|
-| `depends_on` | `depended_by` | This entry depends on another |
-| `blocks` | `blocked_by` | This entry blocks another |
-| `fixes` | `fixed_by` | This entry fixes a bug |
-| `implements` | `implemented_by` | This entry implements a feature |
-| `duplicate_of` | `has_duplicate` | Duplicate of another entry |
-| `related` | `related` | Related to another entry |
-| `supersedes` | `superseded_by` | This entry replaces another |
-| `superseded_by` | `supersedes` | This entry was replaced by another |
-| `epic` | `contains` | Belongs to an epic |
-| `contains` | `part_of` | Epic contains these entries |
-| `parent` | `children` | Parent-child relationship |
-
-## Commands
-
-### `tracker init [path]`
-
-Scaffold a new `tracker/` directory with all subdirectories and a template.
-
-- **Input:** Project root path (default: cwd)
-- **Output:** `tracker/` directory structure
-- **Side effects:** Creates folders, writes `_template.md`
-- **Exit codes:** `0` success
-
-### `tracker new <type> <name>`
-
-Create a new tracker entry.
-
-- **Input:** Type (`bug`, `feature`, `adr`, `task`, `epic`, `doc`) and name
-- **Options:** `--status`, `--priority`, `--severity`, `--effort`, `--owner`, `--tags`, `--description`, `--summary`
-- **Output:** Entry file with auto-generated ID
-- **Side effects:** Creates file, runs `rebuild`
-- **Exit codes:** `0` success
-
-### `tracker close <id> [--resolution <text>]`
-
-Mark an entry as DONE.
-
-- **Input:** Entry ID (e.g. `BUG-001`)
-- **Output:** Updated entry
-- **Side effects:** Sets STATUS to DONE, optionally appends Resolution section, runs `rebuild`
-- **Exit codes:** `0` success, `1` entry not found
-
-### `tracker validate`
-
-Check all entries against the schema.
-
-- **Input:** `tracker/` directory
-- **Output:** Validation report (errors + warnings)
-- **Side effects:** None
-- **Exit codes:** `0` valid, `1` validation errors
-
-### `tracker rebuild`
-
-Regenerate all generated files from entry frontmatter.
-
-- **Input:** `tracker/` directory
-- **Output:** Updated `README.md`, `*/index.md`, `graph.json`, COMPUTED backlinks
-- **Side effects:** Overwrites generated files only
-- **Exit codes:** `0` success
-
-### `tracker migrate`
-
-Upgrade entries from schema 1 to schema 2.
-
-- **Input:** `tracker/` directory
-- **Output:** Migration report
-- **Side effects:** Rewrites entry files, moves them to correct folders, runs `rebuild`
-- **Exit codes:** `0` success
-
-### `tracker doctor`
-
-Validate and auto-fix common issues.
-
-- **Input:** `tracker/` directory
-- **Output:** Fix report
-- **Side effects:** Regenerates indexes, fixes empty bodies, runs `rebuild`
-- **Exit codes:** `0` success
-
-### `tracker search <query>`
-
-Full-text and field search across all entries.
-
-- **Input:** Search query
-- **Output:** Ranked results table
-- **Side effects:** None
-- **Exit codes:** `0` success
-
-### `tracker stats`
-
-Aggregated counts by type and status.
-
-- **Input:** `tracker/` directory
-- **Output:** Summary table
-- **Side effects:** None
-- **Exit codes:** `0` success
-
-## Agent policies
-
-These define how an agent should behave when interacting with the tracker.
-
-### Before editing code
-
-1. `tracker search <domain>` — find related bugs, features, ADRs
-2. Read matched entries for full context
-3. `tracker validate` — confirm tracker state is consistent
-
-### After editing code
-
-1. Create or update relevant entry (status, relations, affected files)
-2. `tracker rebuild` — regenerate indexes and graph
-3. `tracker validate` — confirm consistency
-
-### Before closing an entry
-
-1. Ensure `## Verification` section exists in the body
-2. Ensure all relations are valid (referenced IDs exist)
-3. `tracker validate`
-
-### When creating a new entry
-
-1. Always specify `TYPE` correctly
-2. Use `RELATIONS` to link to existing entries (don't just mention them in the body)
-3. Use `AFFECTS.files` to record which source files are relevant
-4. Set an appropriate `PRIORITY` and `EFFORT`
-
-## graph.json
-
-After `tracker rebuild`, `tracker/graph.json` contains every entry as a node
-with its relations, affects, and computed backlinks.  An agent can load this
-file in a single read to get the full project graph:
+After `tracker rebuild`, the file `tracker/graph.json` contains every entry
+as a node with its relations, affected files, and computed backlinks.
+Read this file once to get the full project graph in a single load:
 
 ```json
 {
   "BUG-001": {
-    "type": "bug",
-    "status": "IN_PROGRESS",
-    "priority": "High",
-    "relations": {
-      "depends_on": ["FEAT-018"],
-      "epic": ["EPIC-001"]
-    },
-    "affects": {
-      "modules": ["authentication"],
-      "files": ["backend/api/auth.py"]
-    },
+    "type": "bug", "status": "IN_PROGRESS", "priority": "High",
+    "relations": { "depends_on": ["FEAT-018"], "epic": ["EPIC-001"] },
+    "affects": { "files": ["backend/api/auth.py"] },
     "referenced_by": ["BUG-003"]
   }
 }
 ```
+
+## Workflow: Closing an entry
+
+    tracker close BUG-001 --resolution "Fixed with write lock"
+
+Before closing, ensure the Verification section is complete and all relations
+are valid.
+
+## Quick command reference
+
+| Command | What it does | When to use |
+|---------|-------------|-------------|
+| `init` | Scaffold tracker/ + folders | Once per project |
+| `new <type> <name>` | Create entry with auto-ID | Adding a bug, feature, ADR, task, or epic |
+| `close <id>` | Mark entry DONE | After fix or feature ships |
+| `validate` | Check schema + refs | Before/after any edit |
+| `rebuild` | Regenerate indexes + graph.json | After any edit |
+| `migrate` | Upgrade old v1 entries to v2 | Once when adopting SCHEMA 2 |
+| `doctor` | Validate + auto-fix issues | When validate reports warnings |
+| `search <query>` | Full-text + field search | Before editing, to find context |
+| `stats` | Counts by type/status | Quick project overview |

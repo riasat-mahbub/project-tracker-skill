@@ -1,20 +1,19 @@
 # project-tracker-skill
 
-An OpenCode/Codex/Claude Code skill for maintaining a file-based project
-knowledge graph.  This is a thin orchestration layer — the actual tool lives
-at [project-tracker-graph](https://github.com/riasat-mahbub/project-tracker-graph).
+A skill for OpenCode, Reasonix, and Claude Code that maintains a file-based
+project knowledge graph.  The actual CLI tool lives in a [separate repo](https://github.com/riasat-mahbub/projet-tracker-graph).
 
-## Quickstart
+## Install
 
 ```bash
-# Install the tool in your project
-pip install pyyaml
-pip install -e /path/to/project-tracker-graph   # or add to dev dependencies
-
-# Scaffold a tracker
-tracker init
+bash scripts/install.sh
 ```
 
-## Command reference
+This clones the tool repo, installs the CLI, detects your harness, and
+symlinks the skill into the correct skills directory.
 
-See [SKILL.md](SKILL.md) for full command docs, format spec, and agent policies.
+Supports: **OpenCode**, **Reasonix**, **Claude Code**.
+
+## Usage
+
+See [SKILL.md](SKILL.md) for workflows and command reference.
